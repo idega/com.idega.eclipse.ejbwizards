@@ -200,8 +200,8 @@ public class ResourceCreator {
 				code = createRemoteMethods(itype,lineDelimiter,type).toString();
 				setRemoteName(resourceName.substring(0,resourceName.lastIndexOf("Bean")));
 				setTypeName(getRemoteName());
-				
-				setSuperClass("com.idega.business.IBOService");
+				addSuperInterface("com.idega.business.IBOService");
+
 				fIsClass = false;
 				createType(monitor,itype,code.toString());
 				resetSuperInterfaces();
@@ -233,7 +233,7 @@ public class ResourceCreator {
 			    code = createRemoteMethods(itype,lineDelimiter,type).toString();
 				setRemoteName(resourceName.substring(0,resourceName.lastIndexOf("Bean")));
 				setTypeName(getRemoteName());
-				setSuperClass("com.idega.business.IBOSession");
+				addSuperInterface("com.idega.business.IBOSession");
 				
 				fIsClass = false;
 				createType(monitor,itype,code.toString());

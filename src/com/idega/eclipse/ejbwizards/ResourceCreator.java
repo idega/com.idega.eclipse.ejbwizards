@@ -1088,6 +1088,13 @@ public class ResourceCreator {
 	 */
 	public static class ImportsManager implements /* internal */ IImportsStructure {
 
+		/* (non-Javadoc)
+		 * @see org.eclipse.jdt.internal.corext.codemanipulation.IImportsStructure#addStaticImport(java.lang.String, java.lang.String, boolean)
+		 */
+		public String addStaticImport(String qualifiedTypeName, String selector, boolean isField) {
+			return fImportsStructure.addStaticImport(qualifiedTypeName, selector, isField);
+		}
+		
 		private ImportsStructure fImportsStructure;
 		private Set fAddedTypes;
 		
@@ -1133,7 +1140,7 @@ public class ResourceCreator {
 		
 		/* package */ void removeImport(String qualifiedName) {
 			if (fAddedTypes.contains(qualifiedName)) {
-				fImportsStructure.removeImport(qualifiedName);
+				fImportsStructure.removeImport(qualifiedName, false);
 			}
 		}
 		

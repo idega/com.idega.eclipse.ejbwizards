@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?eclipse version="3.0"?>
+<?eclipse version="3.1"?>
 <plugin
    id="com.idega.eclipse.ejbwizards"
    name="Ejbwizards Plug-in"
-   version="1.0.5"
+   version="1.1.0"
    provider-name="IDEGA"
    class="com.idega.eclipse.ejbwizards.EjbwizardsPlugin">
 

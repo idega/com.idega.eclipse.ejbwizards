@@ -134,8 +134,9 @@ public class ResourceCreator {
 			    	String code = createRemoteMethods(itype,lineDelimiter,type).toString();
 				setRemoteName(resourceName.substring(0,resourceName.lastIndexOf("BMPBean")));
 				setTypeName(getRemoteName());
+				itype.getSuperInterfaceNames();
 				addSuperInterface("com.idega.data.IDOEntity");
-				
+				addSuperInterfaces(itype.getSuperInterfaceNames());
 				fIsClass = false;
 				createType(monitor,itype,code.toString());
 				resetSuperInterfaces();
@@ -171,6 +172,7 @@ public class ResourceCreator {
 				setTypeName(getRemoteName());
 				
 				addSuperInterface("com.idega.data.IDOLegacyEntity");
+				addSuperInterfaces(itype.getSuperInterfaceNames());
 				fIsClass = false;
 				createType(monitor,itype,code.toString());
 				resetSuperInterfaces();
@@ -205,7 +207,7 @@ public class ResourceCreator {
 				setRemoteName(resourceName.substring(0,resourceName.lastIndexOf("Bean")));
 				setTypeName(getRemoteName());
 				addSuperInterface("com.idega.business.IBOService");
-
+				addSuperInterfaces(itype.getSuperInterfaceNames());
 				fIsClass = false;
 				createType(monitor,itype,code.toString());
 				resetSuperInterfaces();
@@ -239,7 +241,7 @@ public class ResourceCreator {
 				setRemoteName(resourceName.substring(0,resourceName.lastIndexOf("Bean")));
 				setTypeName(getRemoteName());
 				addSuperInterface("com.idega.business.IBOSession");
-				
+				addSuperInterfaces(itype.getSuperInterfaceNames());
 				fIsClass = false;
 				createType(monitor,itype,code.toString());
 				resetSuperInterfaces();
@@ -558,16 +560,18 @@ public class ResourceCreator {
 			}
 			for (int i= 0; i <= last; i++) {
 				String typename= (String) interfaces.get(i);
-				if(Signature.getQualifier(typename).length()>0){
-				    buf.append(imports.addImport(typename));
-				    
-				}
-				else{
-				    buf.append(typename);
-				}
-				if (i < last) {
-				    buf.append(',');
-			    }	
+				if(!typename.equals(getTypeName())){
+					if(Signature.getQualifier(typename).length()>0){
+					    buf.append(imports.addImport(typename));
+					    
+					}
+					else{
+					    buf.append(typename);
+					}
+					if (i < last) {
+					    buf.append(',');
+				    }
+				}	
 			}
 		}
 	}
@@ -694,7 +698,11 @@ public class ResourceCreator {
 	    fSuperInterfaces.add(name);
 	}
 	
-	
+	public void addSuperInterfaces(String[] names){
+	    for (int i = 0; i < names.length; i++) {
+            addSuperInterface(names[i]);
+        }
+	}
 	
 	public StringBuffer createRemoteMethods(IType itype, String lineDelimiter,int type)throws JavaModelException {
 	    StringBuffer methodsCode = new StringBuffer();

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin
+   id="com.idega.eclipse.ejbwizards"
+   name="Ejbwizards Plug-in"
+   version="1.0.0"
+   provider-name="IDEGA"
+   class="com.idega.eclipse.ejbwizards.EjbwizardsPlugin">
+
+   <runtime>
+   </runtime>
+
+   <requires>
+      <import plugin="org.eclipse.ui"/>
+      <import plugin="org.eclipse.core.runtime"/>
+      <import plugin="org.eclipse.core.resources"/>
+      <import plugin="org.eclipse.jdt.core"/>
+      <import plugin="org.eclipse.jdt.ui"/>
+   </requires>
+
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            objectClass="org.eclipse.core.runtime.IAdaptable"
+            nameFilter="*Bean.java"
+            id="com.idega.eclipse.ejbwizards.contribution1">
+          
+         <menu
+               label="Idegaweb"
+               path="additions"
+               id="com.idega.eclipse.ejbwizards.menu1">
+            <separator name="group1"/>
+         </menu>
+         
+         <action
+               enablesFor="1"
+               label="EJB IDOLegacyEntity"
+               class="com.idega.eclipse.ejbwizards.actions.IDOLegacyEntityAction"
+               menubarPath="com.idega.eclipse.ejbwizards.menu1/group1"
+               id="com.idega.eclipse.ejbwizards.IDOLegacyAction">
+         </action>
+          <action
+               enablesFor="1"
+               label="EJB IBOSession"
+               class="com.idega.eclipse.ejbwizards.actions.IBOSessionAction"
+               menubarPath="com.idega.eclipse.ejbwizards.menu1/group1"
+               id="com.idega.eclipse.ejbwizards.IBOSessionAction">
+         </action>
+         <action
+               enablesFor="1"
+               label="EJB IBOService"
+               class="com.idega.eclipse.ejbwizards.actions.IBOServiceAction"
+               menubarPath="com.idega.eclipse.ejbwizards.menu1/group1"
+               id="com.idega.eclipse.ejbwizards.IBOServiceAction">
+         </action>
+         <action
+               enablesFor="1"
+               label="EJB IDOEntity"
+               class="com.idega.eclipse.ejbwizards.actions.IDOEntityAction"
+               menubarPath="com.idega.eclipse.ejbwizards.menu1/group1"
+               id="com.idega.eclipse.ejbwizards.IDOEntityAction">
+         </action>
+      </objectContribution>
+   </extension>
+
+</plugin>

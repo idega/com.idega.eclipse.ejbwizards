@@ -729,7 +729,7 @@ public class ResourceCreator {
      * @return
      */
     private boolean throwRemoteExceptionsInHome() {
-        return throwRemoteExcptionInHome = true;
+        return throwRemoteExcptionInHome;
     }
     
     private void setThrowRemoteExceptionInHome(boolean flag){

@@ -10,8 +10,10 @@ package com.idega.eclipse.ejbwizards;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.core.resources.IFile;
@@ -561,6 +563,9 @@ public class ResourceCreator {
 			for (int i= 0; i <= last; i++) {
 				String typename= (String) interfaces.get(i);
 				if(!typename.equals(getTypeName())){
+				    if (i >0) {
+					    buf.append(',');
+				    }
 					if(Signature.getQualifier(typename).length()>0){
 					    buf.append(imports.addImport(typename));
 					    
@@ -568,9 +573,7 @@ public class ResourceCreator {
 					else{
 					    buf.append(typename);
 					}
-					if (i < last) {
-					    buf.append(',');
-				    }
+					
 				}	
 			}
 		}
@@ -1022,6 +1025,7 @@ public class ResourceCreator {
 	    else   
 	        methodSignature.append(Signature.toString(method.getSignature(),cutAwayEJBSuffix(methodName),method.getParameterNames(),true,true));
 	    String[] exceptions = method.getExceptionTypes();
+	    Map map = new Hashtable();
 	    boolean hasAddedException = false;
 	    boolean hasAddedThrows = false;
 	    if(exceptions.length>0){
@@ -1031,6 +1035,7 @@ public class ResourceCreator {
 	            if(i>0 && 1< (exceptions.length+1))
 	                methodSignature.append(",");
                 methodSignature.append(Signature.toString(exceptions[i]));
+                map.put(Signature.getSimpleName(Signature.toString(exceptions[i])),Signature.toString(exceptions[i]));
                 hasAddedException = true;
             }
 	    }
@@ -1040,9 +1045,13 @@ public class ResourceCreator {
 	            methodSignature.append(" throws ");
 		    for (Iterator iter = exs.iterator(); iter.hasNext();) {
 	            String ex = (String) iter.next();
-	            if(hasAddedException)
-	                methodSignature.append(",");
-	            methodSignature.append(ex);
+	            if(!map.containsKey(Signature.getSimpleName(ex))){
+		            if(hasAddedException)
+		                methodSignature.append(",");
+		            methodSignature.append(ex);
+		            map.put(Signature.getSimpleName(ex),ex);
+		            hasAddedException = true;
+	            }
 	        	}
 	    }
 	    

@@ -85,6 +85,7 @@ public class ResourceCreator {
     private String homeName;
     private boolean isEntity = false;
     private boolean isService = false;
+    private boolean throwRemoteExcptionInHome = true;
 	
 	public void createResource(IFile file,int type){
 		try {
@@ -140,9 +141,11 @@ public class ResourceCreator {
 				resetSuperInterfaces();
 				
 				// create home interface
+				
 				String homeName = remoteName+"Home";
 				setTypeName(homeName);
 				addSuperInterface("com.idega.data.IDOHome");
+				setThrowRemoteExceptionInHome(false);
 				code = createHomeMethods(itype,lineDelimiter,type).toString();
 				fIsClass = false;
 				createType(monitor,itype,code);
@@ -175,6 +178,7 @@ public class ResourceCreator {
 				// create home interface
 				homeName = remoteName+"Home";
 				setTypeName(homeName);
+				setThrowRemoteExceptionInHome(false);
 				addSuperInterface("com.idega.data.IDOHome");
 				code = createHomeMethods(itype,lineDelimiter,type).toString();
 				fIsClass = false;
@@ -209,6 +213,7 @@ public class ResourceCreator {
 				// create home interface
 				homeName = remoteName+"Home";
 				setTypeName(homeName);
+				setThrowRemoteExceptionInHome(true);
 				addSuperInterface("com.idega.business.IBOHome");
 				code = createHomeMethods(itype,lineDelimiter,type).toString();
 				fIsClass = false;
@@ -244,6 +249,7 @@ public class ResourceCreator {
 				homeName = remoteName+"Home";
 				setTypeName(homeName);
 				addSuperInterface("com.idega.business.IBOHome");
+				setThrowRemoteExceptionInHome(true);
 				code = createHomeMethods(itype,lineDelimiter,type).toString();
 				fIsClass = false;
 				createType(monitor,itype,code);
@@ -723,7 +729,11 @@ public class ResourceCreator {
      * @return
      */
     private boolean throwRemoteExceptionsInHome() {
-        return true;
+        return throwRemoteExcptionInHome = true;
+    }
+    
+    private void setThrowRemoteExceptionInHome(boolean flag){
+        throwRemoteExcptionInHome = flag;
     }
     
 

@@ -8,7 +8,10 @@
  */
 package com.idega.eclipse.ejbwizards.actions;
 
-import com.idega.eclipse.ejbwizards.WizardConstants;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.jdt.core.JavaModelException;
+
+import com.idega.eclipse.ejbwizards.IDOEntityCreator;
 
 /**
  * @author aron
@@ -17,10 +20,7 @@ import com.idega.eclipse.ejbwizards.WizardConstants;
  */
 public class IDOEntityAction extends EJBMenuAction {
 
-	/* (non-Javadoc)
-	 * @see com.idega.ejbwizards.actions.EJBMenuAction#getType()
-	 */
-	public int getType() {
-		return WizardConstants.IDOENTITY;
+	protected void createResource(IResource resource) throws JavaModelException {
+		new IDOEntityCreator(resource, false);
 	}
 }

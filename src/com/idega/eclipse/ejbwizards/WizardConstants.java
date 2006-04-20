@@ -15,21 +15,12 @@ package com.idega.eclipse.ejbwizards;
  */
 public class WizardConstants {
 
-    public final static int IDOENTITY = 1;
-
-    public final static int IDOLEGACYENTITY = 2;
-
-    public final static int IBOSERVICE = 3;
-
-    public final static int IBOSESSION = 4;
-
     protected static String INITIALIZE_ATTRIBUTES = "initializeAttributes";
 
     protected static String GET_ENTITY_NAME = "getEntityName";
 
     protected static String GET_ID_COLUMN_NAME = "getIDColumnName";
 
-    //protected static String DELETE="delete";
     protected static String UPDATE = "update";
 
     protected static String INSERT = "insert";

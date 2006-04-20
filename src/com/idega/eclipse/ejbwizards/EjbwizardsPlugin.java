@@ -22,9 +22,9 @@ public class EjbwizardsPlugin extends AbstractUIPlugin {
 		super();
 		plugin = this;
 		try {
-			resourceBundle = ResourceBundle.getBundle("com.idega.eclipse.ejbwizards.EjbwizardsPluginResources");
+			this.resourceBundle = ResourceBundle.getBundle("com.idega.eclipse.ejbwizards.EjbwizardsPluginResources");
 		} catch (MissingResourceException x) {
-			resourceBundle = null;
+			this.resourceBundle = null;
 		}
 	}
 
@@ -66,6 +66,6 @@ public class EjbwizardsPlugin extends AbstractUIPlugin {
 	 * Returns the plugin's resource bundle,
 	 */
 	public ResourceBundle getResourceBundle() {
-		return resourceBundle;
+		return this.resourceBundle;
 	}
 }

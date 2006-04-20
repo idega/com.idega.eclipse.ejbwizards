@@ -1,7 +1,7 @@
-Manifest-Version: 1.1
+Manifest-Version: 1.2
 Bundle-Name: Ejbwizards Plug-in
-Bundle-SymbolicName: com.idega.eclipse.ejbwizards; singleton=true
-Bundle-Version: 1.1.1
+Bundle-SymbolicName: com.idega.eclipse.ejbwizards;singleton:=true
+Bundle-Version: 2.0.1
 Bundle-Activator: com.idega.eclipse.ejbwizards.EjbwizardsPlugin
 Bundle-Vendor: IDEGA
 Bundle-Localization: plugin
@@ -9,6 +9,9 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.core.resources,
  org.eclipse.jdt.core,
- org.eclipse.jdt.ui
-Eclipse-AutoStart: true
+ org.eclipse.jdt.ui,
+ org.eclipse.text,
+ org.eclipse.jface.text
+Eclipse-LazyStart: true
 Bundle-ClassPath: bin/
+Bundle-ManifestVersion: 2

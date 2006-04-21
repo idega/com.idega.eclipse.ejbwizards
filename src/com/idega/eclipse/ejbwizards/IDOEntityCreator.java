@@ -370,11 +370,20 @@ public class IDOEntityCreator extends BeanCreator {
 			for (int i = 0; i < parameterTypes.length; i++) {
 				variableDeclaration = ast.newSingleVariableDeclaration();
 				variableDeclaration.modifiers().addAll(ast.newModifiers(Modifier.NONE));
-				variableDeclaration.setType(ast.newSimpleType(ast.newSimpleName(Signature.getSignatureSimpleName(parameterTypes[i]))));
+				try {
+					variableDeclaration.setType(ast.newSimpleType(ast.newSimpleName(Signature.getSignatureSimpleName(parameterTypes[i]))));
+					isPrimitive = false;
+				}
+				catch (IllegalArgumentException iae) {
+					variableDeclaration.setType(ast.newPrimitiveType(PrimitiveType.toCode(Signature.getSignatureSimpleName(parameterTypes[i]))));
+					isPrimitive = true;
+				}
 				variableDeclaration.setName(ast.newSimpleName(parameterNames[i]));
 				methodConstructor.parameters().add(variableDeclaration);
 
-				imports.add(getImportSignature(Signature.toString(parameterTypes[i])));
+				if (!isPrimitive) {
+					imports.add(getImportSignature(Signature.toString(parameterTypes[i])));
+				}
 			}
 
 			Javadoc jc = ast.newJavadoc();
@@ -691,11 +700,20 @@ public class IDOEntityCreator extends BeanCreator {
 			for (int i = 0; i < parameterTypes.length; i++) {
 				variableDeclaration = ast.newSingleVariableDeclaration();
 				variableDeclaration.modifiers().addAll(ast.newModifiers(Modifier.NONE));
-				variableDeclaration.setType(ast.newSimpleType(ast.newSimpleName(Signature.getSignatureSimpleName(parameterTypes[i]))));
+				try {
+					variableDeclaration.setType(ast.newSimpleType(ast.newSimpleName(Signature.getSignatureSimpleName(parameterTypes[i]))));
+					isPrimitive = false;
+				}
+				catch (IllegalArgumentException iae) {
+					variableDeclaration.setType(ast.newPrimitiveType(PrimitiveType.toCode(Signature.getSignatureSimpleName(parameterTypes[i]))));
+					isPrimitive = true;
+				}
 				variableDeclaration.setName(ast.newSimpleName(parameterNames[i]));
 				methodConstructor.parameters().add(variableDeclaration);
 
-				imports.add(getImportSignature(Signature.toString(parameterTypes[i])));
+				if (!isPrimitive) {
+					imports.add(getImportSignature(Signature.toString(parameterTypes[i])));
+				}
 			}
 			
 			constructorBlock = ast.newBlock();

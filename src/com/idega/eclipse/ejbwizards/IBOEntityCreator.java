@@ -33,7 +33,6 @@ import org.eclipse.jdt.core.dom.Javadoc;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
-import org.eclipse.jdt.core.dom.PrimitiveType;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
@@ -138,30 +137,15 @@ public class IBOEntityCreator extends BeanCreator {
 			String[] exceptions = method.getExceptionTypes();
 			String[] parameterTypes = method.getParameterTypes();
 			String[] parameterNames = method.getParameterNames();
-			String returnType = Signature.getSignatureSimpleName(method.getReturnType());
-			if (returnType.equals("void")) {
-				returnType = null;
-			}
-			boolean isPrimitive = false;
+			String returnType = getReturnType(method.getReturnType());
 
 			MethodDeclaration methodConstructor = ast.newMethodDeclaration();
 			methodConstructor.setConstructor(false);
 			methodConstructor.modifiers().addAll(ast.newModifiers(Modifier.PUBLIC));
-			if (returnType != null) {
-				try {
-					methodConstructor.setReturnType2(ast.newSimpleType(ast.newSimpleName(returnType)));
-				}
-				catch (IllegalArgumentException iae) {
-					methodConstructor.setReturnType2(ast.newPrimitiveType(PrimitiveType.toCode(returnType)));
-					isPrimitive = true;
-				}
-			}
-			else {
-				methodConstructor.setReturnType2(ast.newPrimitiveType(PrimitiveType.VOID));
-			}
+			methodConstructor.setReturnType2(getType(ast, returnType));
 			methodConstructor.setName(ast.newSimpleName(method.getElementName()));
 			classType.bodyDeclarations().add(methodConstructor);
-			if (returnType != null && !isPrimitive) {
+			if (returnType != null) {
 				imports.add(getImportSignature(returnType));
 			}
 			
@@ -173,22 +157,15 @@ public class IBOEntityCreator extends BeanCreator {
 			imports.add("java.rmi.RemoteException");
 
 			for (int i = 0; i < parameterTypes.length; i++) {
+				String parameterType = getReturnType(parameterTypes[i]);
+				
 				SingleVariableDeclaration variableDeclaration = ast.newSingleVariableDeclaration();
 				variableDeclaration.modifiers().addAll(ast.newModifiers(Modifier.NONE));
-				try {
-					variableDeclaration.setType(ast.newSimpleType(ast.newSimpleName(Signature.getSignatureSimpleName(parameterTypes[i]))));
-					isPrimitive = false;
-				}
-				catch (IllegalArgumentException iae) {
-					variableDeclaration.setType(ast.newPrimitiveType(PrimitiveType.toCode(Signature.getSignatureSimpleName(parameterTypes[i]))));
-					isPrimitive = true;
-				}
+				variableDeclaration.setType(getType(ast, parameterType));
 				variableDeclaration.setName(ast.newSimpleName(parameterNames[i]));
 				methodConstructor.parameters().add(variableDeclaration);
 
-				if (!isPrimitive) {
-					imports.add(getImportSignature(Signature.toString(parameterTypes[i])));
-				}
+				imports.add(getImportSignature(Signature.toString(parameterTypes[i])));
 			}
 
 			Javadoc jc = ast.newJavadoc();

@@ -24,9 +24,11 @@ import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.PrimitiveType;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.ui.CodeGeneration;
@@ -96,6 +98,9 @@ public abstract class BeanCreator {
 	}
 
 	protected String getImportSignature(String importName) {
+		if (importName.indexOf("[") != -1) {
+			importName = importName.substring(0, importName.indexOf("["));
+		}
 		return (String) this.importMap.get(importName);
 	}
 
@@ -188,5 +193,42 @@ public abstract class BeanCreator {
 			}
 		}
 		return list;
+	}
+	
+	protected String getReturnType(String returnType) {
+		returnType = Signature.getSignatureSimpleName(returnType);
+		if (returnType.equals("void")) {
+			returnType = null;
+		}
+		
+		return returnType;
+	}
+	
+	protected Type getType(AST ast, String type) {
+		Type returnType = null;
+		
+		if (type != null) {
+			boolean isArray = false;
+			if (type.indexOf("[") != -1) {
+				isArray = true;
+			}
+			
+			try {
+				if (isArray) {
+					returnType = ast.newArrayType(ast.newSimpleType(ast.newSimpleName(type.substring(0, type.indexOf("[")))));
+				}
+				else {
+					returnType = ast.newSimpleType(ast.newSimpleName(type));
+				}
+			}
+			catch (IllegalArgumentException iae) {
+				returnType = ast.newPrimitiveType(PrimitiveType.toCode(type));
+			}
+		}
+		else {
+			returnType = ast.newPrimitiveType(PrimitiveType.VOID);
+		}
+
+		return returnType;
 	}
 }

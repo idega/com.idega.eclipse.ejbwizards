@@ -148,30 +148,15 @@ public class IDOEntityCreator extends BeanCreator {
 			String[] exceptions = method.getExceptionTypes();
 			String[] parameterTypes = method.getParameterTypes();
 			String[] parameterNames = method.getParameterNames();
-			String returnType = Signature.getSignatureSimpleName(method.getReturnType());
-			if (returnType.equals("void")) {
-				returnType = null;
-			}
-			boolean isPrimitive = false;
+			String returnType = getReturnType(method.getReturnType());
 
 			MethodDeclaration methodConstructor = ast.newMethodDeclaration();
 			methodConstructor.setConstructor(false);
 			methodConstructor.modifiers().addAll(ast.newModifiers(Modifier.PUBLIC));
-			if (returnType != null) {
-				try {
-					methodConstructor.setReturnType2(ast.newSimpleType(ast.newSimpleName(returnType)));
-				}
-				catch (IllegalArgumentException iae) {
-					methodConstructor.setReturnType2(ast.newPrimitiveType(PrimitiveType.toCode(returnType)));
-					isPrimitive = true;
-				}
-			}
-			else {
-				methodConstructor.setReturnType2(ast.newPrimitiveType(PrimitiveType.VOID));
-			}
+			methodConstructor.setReturnType2(getType(ast, returnType));
 			methodConstructor.setName(ast.newSimpleName(method.getElementName()));
 			classType.bodyDeclarations().add(methodConstructor);
-			if (returnType != null && !isPrimitive) {
+			if (returnType != null) {
 				imports.add(getImportSignature(returnType));
 			}
 			
@@ -181,22 +166,15 @@ public class IDOEntityCreator extends BeanCreator {
 			}
 
 			for (int i = 0; i < parameterTypes.length; i++) {
+				String parameterType = getReturnType(parameterTypes[i]);
+				
 				SingleVariableDeclaration variableDeclaration = ast.newSingleVariableDeclaration();
 				variableDeclaration.modifiers().addAll(ast.newModifiers(Modifier.NONE));
-				try {
-					variableDeclaration.setType(ast.newSimpleType(ast.newSimpleName(Signature.getSignatureSimpleName(parameterTypes[i]))));
-					isPrimitive = false;
-				}
-				catch (IllegalArgumentException iae) {
-					variableDeclaration.setType(ast.newPrimitiveType(PrimitiveType.toCode(Signature.getSignatureSimpleName(parameterTypes[i]))));
-					isPrimitive = true;
-				}
+				variableDeclaration.setType(getType(ast, parameterType));
 				variableDeclaration.setName(ast.newSimpleName(parameterNames[i]));
 				methodConstructor.parameters().add(variableDeclaration);
 
-				if (!isPrimitive) {
-					imports.add(getImportSignature(Signature.toString(parameterTypes[i])));
-				}
+				imports.add(getImportSignature(Signature.toString(parameterTypes[i])));
 			}
 
 			Javadoc jc = ast.newJavadoc();
@@ -330,11 +308,7 @@ public class IDOEntityCreator extends BeanCreator {
 			String[] exceptions = method.getExceptionTypes();
 			String[] parameterTypes = method.getParameterTypes();
 			String[] parameterNames = method.getParameterNames();
-			String returnType = Signature.getSignatureSimpleName(method.getReturnType());
-			if (returnType.equals("void")) {
-				returnType = null;
-			}
-			boolean isPrimitive = false;
+			String returnType = getReturnType(method.getReturnType());
 
 			methodConstructor = ast.newMethodDeclaration();
 			methodConstructor.setConstructor(false);
@@ -344,21 +318,10 @@ public class IDOEntityCreator extends BeanCreator {
 					returnType = name;
 				}
 			}
-			if (returnType != null) {
-				try {
-					methodConstructor.setReturnType2(ast.newSimpleType(ast.newSimpleName(returnType)));
-				}
-				catch (IllegalArgumentException iae) {
-					methodConstructor.setReturnType2(ast.newPrimitiveType(PrimitiveType.toCode(returnType)));
-					isPrimitive = true;
-				}
-			}
-			else {
-				methodConstructor.setReturnType2(ast.newPrimitiveType(PrimitiveType.VOID));
-			}
+			methodConstructor.setReturnType2(getType(ast, returnType));
 			methodConstructor.setName(ast.newSimpleName(methodName));
 			classType.bodyDeclarations().add(methodConstructor);
-			if (returnType != null && !isPrimitive) {
+			if (returnType != null) {
 				imports.add(getImportSignature(Signature.toString(method.getReturnType())));
 			}
 			
@@ -368,22 +331,15 @@ public class IDOEntityCreator extends BeanCreator {
 			}
 
 			for (int i = 0; i < parameterTypes.length; i++) {
+				String parameterType = getReturnType(parameterTypes[i]);
+				
 				variableDeclaration = ast.newSingleVariableDeclaration();
 				variableDeclaration.modifiers().addAll(ast.newModifiers(Modifier.NONE));
-				try {
-					variableDeclaration.setType(ast.newSimpleType(ast.newSimpleName(Signature.getSignatureSimpleName(parameterTypes[i]))));
-					isPrimitive = false;
-				}
-				catch (IllegalArgumentException iae) {
-					variableDeclaration.setType(ast.newPrimitiveType(PrimitiveType.toCode(Signature.getSignatureSimpleName(parameterTypes[i]))));
-					isPrimitive = true;
-				}
+				variableDeclaration.setType(getType(ast, parameterType));
 				variableDeclaration.setName(ast.newSimpleName(parameterNames[i]));
 				methodConstructor.parameters().add(variableDeclaration);
 
-				if (!isPrimitive) {
-					imports.add(getImportSignature(Signature.toString(parameterTypes[i])));
-				}
+				imports.add(getImportSignature(Signature.toString(parameterTypes[i])));
 			}
 
 			Javadoc jc = ast.newJavadoc();
@@ -660,11 +616,7 @@ public class IDOEntityCreator extends BeanCreator {
 			String[] exceptions = method.getExceptionTypes();
 			String[] parameterTypes = method.getParameterTypes();
 			String[] parameterNames = method.getParameterNames();
-			String returnType = Signature.getSignatureSimpleName(method.getReturnType());
-			if (returnType.equals("void")) {
-				returnType = null;
-			}
-			boolean isPrimitive = false;
+			String returnType = getReturnType(method.getReturnType());
 
 			methodConstructor = ast.newMethodDeclaration();
 			methodConstructor.setConstructor(false);
@@ -674,21 +626,10 @@ public class IDOEntityCreator extends BeanCreator {
 					returnType = name;
 				}
 			}
-			if (returnType != null) {
-				try {
-					methodConstructor.setReturnType2(ast.newSimpleType(ast.newSimpleName(returnType)));
-				}
-				catch (IllegalArgumentException iae) {
-					methodConstructor.setReturnType2(ast.newPrimitiveType(PrimitiveType.toCode(returnType)));
-					isPrimitive = true;
-				}
-			}
-			else {
-				methodConstructor.setReturnType2(ast.newPrimitiveType(PrimitiveType.VOID));
-			}
+			methodConstructor.setReturnType2(getType(ast, returnType));
 			methodConstructor.setName(ast.newSimpleName(methodName));
 			classType.bodyDeclarations().add(methodConstructor);
-			if (returnType != null && !isPrimitive) {
+			if (returnType != null) {
 				imports.add(getImportSignature(Signature.toString(method.getReturnType())));
 			}
 			
@@ -698,22 +639,15 @@ public class IDOEntityCreator extends BeanCreator {
 			}
 
 			for (int i = 0; i < parameterTypes.length; i++) {
+				String parameterType = getReturnType(parameterTypes[i]);
+				
 				variableDeclaration = ast.newSingleVariableDeclaration();
 				variableDeclaration.modifiers().addAll(ast.newModifiers(Modifier.NONE));
-				try {
-					variableDeclaration.setType(ast.newSimpleType(ast.newSimpleName(Signature.getSignatureSimpleName(parameterTypes[i]))));
-					isPrimitive = false;
-				}
-				catch (IllegalArgumentException iae) {
-					variableDeclaration.setType(ast.newPrimitiveType(PrimitiveType.toCode(Signature.getSignatureSimpleName(parameterTypes[i]))));
-					isPrimitive = true;
-				}
+				variableDeclaration.setType(getType(ast, parameterType));
 				variableDeclaration.setName(ast.newSimpleName(parameterNames[i]));
 				methodConstructor.parameters().add(variableDeclaration);
 
-				if (!isPrimitive) {
-					imports.add(getImportSignature(Signature.toString(parameterTypes[i])));
-				}
+				imports.add(getImportSignature(Signature.toString(parameterTypes[i])));
 			}
 			
 			constructorBlock = ast.newBlock();

@@ -10,8 +10,11 @@ package com.idega.eclipse.ejbwizards;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
@@ -28,7 +31,15 @@ import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
+import org.eclipse.jdt.core.dom.Javadoc;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.PackageDeclaration;
 import org.eclipse.jdt.core.dom.PrimitiveType;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.TagElement;
+import org.eclipse.jdt.core.dom.TextElement;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.ui.CodeGeneration;
@@ -41,6 +52,10 @@ public abstract class BeanCreator {
 
 	private IType type;
 	private Map importMap;
+	
+	private Set interfaceImports;
+	private Set homeInterfaceImports;
+	private Set homeImplImports;
 
 	protected BeanCreator(IResource resource) {
 		String resourceName = resource.getName();
@@ -59,6 +74,42 @@ public abstract class BeanCreator {
 		catch (JavaModelException jme) {
 			jme.printStackTrace(System.err);
 		}
+	}
+	
+	protected void addInterfaceImport(String importName) {
+		if (this.interfaceImports == null) {
+			this.interfaceImports = new HashSet();
+		}
+		
+		this.interfaceImports.add(importName);
+	}
+	
+	protected Set getInterfaceImports() {
+		return this.interfaceImports;
+	}
+
+	protected void addHomeInterfaceImport(String importName) {
+		if (this.homeInterfaceImports == null) {
+			this.homeInterfaceImports = new HashSet();
+		}
+		
+		this.homeInterfaceImports.add(importName);
+	}
+
+	protected Set getHomeInterfaceImports() {
+		return this.homeInterfaceImports;
+	}
+
+	protected void addHomeImplImport(String importName) {
+		if (this.homeImplImports == null) {
+			this.homeImplImports = new HashSet();
+		}
+		
+		this.homeImplImports.add(importName);
+	}
+
+	protected Set getHomeImplImports() {
+		return this.homeImplImports;
 	}
 
 	protected String getTypeComment(ICompilationUnit iUnit, String typeName) {
@@ -230,5 +281,120 @@ public abstract class BeanCreator {
 		}
 
 		return returnType;
+	}
+	
+	protected PackageDeclaration getPackageDeclaration(AST ast, String packageName) {
+		PackageDeclaration packageDeclaration = ast.newPackageDeclaration();
+		packageDeclaration.setName(ast.newName(packageName));
+		
+		return packageDeclaration;
+	}
+	
+	protected TypeDeclaration getTypeDeclaration(AST ast, String name, boolean isInterface, String superClass, String[] interfaces, Set imports) {
+		TypeDeclaration classType = ast.newTypeDeclaration();
+		classType.setInterface(isInterface);
+		classType.modifiers().addAll(ast.newModifiers(Modifier.PUBLIC));
+		classType.setName(ast.newSimpleName(name));
+		if (isInterface) {
+			classType.superInterfaceTypes().add(ast.newSimpleType(ast.newSimpleName(superClass)));
+		}
+		else {
+			classType.setSuperclassType(ast.newSimpleType(ast.newSimpleName(superClass)));
+		}
+
+		if (interfaces != null) {
+			for (int i = 0; i < interfaces.length; i++) {
+				if (!Signature.getSignatureSimpleName(interfaces[i]).equals(name)) {
+					classType.superInterfaceTypes().add(ast.newSimpleType(ast.newSimpleName(Signature.getSignatureSimpleName(interfaces[i]))));
+					imports.add(getImportSignature(Signature.toString(interfaces[i])));
+				}
+			}
+		}
+		
+		return classType;
+	}
+	
+	protected Javadoc getJavadoc(AST ast, IMethod method) {
+		Javadoc jc = ast.newJavadoc();
+		TagElement tag = ast.newTagElement();
+		tag.setTagName(TagElement.TAG_SEE);
+		TextElement te = ast.newTextElement();
+		te.setText(getType().getFullyQualifiedName() + "#" + method.getElementName());
+		tag.fragments().add(te);
+		jc.tags().add(tag);
+		
+		return jc;
+	}
+	
+	protected MethodDeclaration getMethodDeclaration(AST ast, IMethod method, Set imports) throws JavaModelException {
+		String returnType = getReturnType(method.getReturnType());
+		String methodName = method.getElementName();
+		
+		return getMethodDeclaration(ast, method, methodName, returnType, imports, true);
+	}
+	
+	protected MethodDeclaration getMethodDeclaration(AST ast, IMethod method, String methodName, String returnType, Set imports, boolean addJavadoc) throws JavaModelException {
+		String[] exceptions = method.getExceptionTypes();
+		String[] parameterTypes = method.getParameterTypes();
+		String[] parameterNames = method.getParameterNames();
+
+		MethodDeclaration methodConstructor = ast.newMethodDeclaration();
+		methodConstructor.setConstructor(false);
+		methodConstructor.modifiers().addAll(ast.newModifiers(Modifier.PUBLIC));
+		methodConstructor.setReturnType2(getType(ast, returnType));
+		methodConstructor.setName(ast.newSimpleName(methodName));
+		if (returnType != null) {
+			imports.add(getImportSignature(returnType));
+		}
+		
+		for (int i = 0; i < exceptions.length; i++) {
+			methodConstructor.thrownExceptions().add(ast.newSimpleName(Signature.getSignatureSimpleName(exceptions[i])));
+			imports.add(getImportSignature(Signature.toString(exceptions[i])));
+		}
+
+		for (int i = 0; i < parameterTypes.length; i++) {
+			String parameterType = getReturnType(parameterTypes[i]);
+			
+			SingleVariableDeclaration variableDeclaration = ast.newSingleVariableDeclaration();
+			variableDeclaration.modifiers().addAll(ast.newModifiers(Modifier.NONE));
+			variableDeclaration.setType(getType(ast, parameterType));
+			variableDeclaration.setName(ast.newSimpleName(parameterNames[i]));
+			methodConstructor.parameters().add(variableDeclaration);
+
+			imports.add(getImportSignature(Signature.toString(parameterTypes[i])));
+		}
+
+		if (addJavadoc) {
+			methodConstructor.setJavadoc(getJavadoc(ast, method));
+		}
+		
+		return methodConstructor;
+	}
+	
+	protected void writeImports(AST ast, CompilationUnit unit, Set imports) {
+		Iterator iter = imports.iterator();
+		while (iter.hasNext()) {
+			String importName = (String) iter.next();
+
+			if (importName != null) {
+				ImportDeclaration importDeclaration = ast.newImportDeclaration();
+				importDeclaration.setName(ast.newName(importName));
+				importDeclaration.setOnDemand(false);
+				
+				unit.imports().add(importDeclaration);
+			}
+		}
+	}
+	
+	protected void commitChanges(ICompilationUnit iUnit, CompilationUnit unit, Document document) throws MalformedTreeException, BadLocationException, JavaModelException {
+		TextEdit edits = unit.rewrite(document, iUnit.getJavaProject().getOptions(true));
+		edits.apply(document);
+
+		String newSource = document.get();
+		iUnit.getBuffer().setContents(newSource);
+
+		iUnit.reconcile(ICompilationUnit.NO_AST, false, null, null);
+		iUnit.commitWorkingCopy(true, null);
+		iUnit.discardWorkingCopy();
 	}
 }

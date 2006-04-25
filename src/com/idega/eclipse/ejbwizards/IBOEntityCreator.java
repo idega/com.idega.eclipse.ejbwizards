@@ -9,10 +9,8 @@
  */
 package com.idega.eclipse.ejbwizards;
 
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -22,28 +20,21 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.CastExpression;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.ImportDeclaration;
-import org.eclipse.jdt.core.dom.Javadoc;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
 import org.eclipse.jdt.core.dom.ReturnStatement;
-import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
-import org.eclipse.jdt.core.dom.TagElement;
-import org.eclipse.jdt.core.dom.TextElement;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.TypeLiteral;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.text.edits.MalformedTreeException;
-import org.eclipse.text.edits.TextEdit;
 
 public class IBOEntityCreator extends BeanCreator {
 
@@ -101,32 +92,21 @@ public class IBOEntityCreator extends BeanCreator {
 
 		AST ast = unit.getAST();
 
-		Set imports = new HashSet();
-
 		// Package statement
-		PackageDeclaration packageDeclaration = ast.newPackageDeclaration();
-		unit.setPackage(packageDeclaration);
-		packageDeclaration.setName(ast.newName(typePackage));
+		unit.setPackage(getPackageDeclaration(ast, typePackage));
 
 		// class declaration
-		TypeDeclaration classType = ast.newTypeDeclaration();
-		classType.setInterface(true);
-		classType.modifiers().addAll(ast.newModifiers(Modifier.PUBLIC));
-		classType.setName(ast.newSimpleName(name));
+		String superInterface = null;
 		if (!this.isSessionBean) {
-			classType.superInterfaceTypes().add(ast.newSimpleType(ast.newSimpleName("IBOService")));
-			imports.add("com.idega.business.IBOService");
+			superInterface = "IBOService";
+			getInterfaceImports().add("com.idega.business.IBOService");
 		}
 		else {
-			classType.superInterfaceTypes().add(ast.newSimpleType(ast.newSimpleName("IBOSession")));
-			imports.add("com.idega.business.IBOSession");
+			superInterface = "IBOSession";
+			getInterfaceImports().add("com.idega.business.IBOSession");
 		}
-		for (int i = 0; i < interfaces.length; i++) {
-			if (!Signature.getSignatureSimpleName(interfaces[i]).equals(name)) {
-				classType.superInterfaceTypes().add(ast.newSimpleType(ast.newSimpleName(Signature.getSignatureSimpleName(interfaces[i]))));
-				imports.add(getImportSignature(Signature.toString(interfaces[i])));
-			}
-		}
+
+		TypeDeclaration classType = getTypeDeclaration(ast, name, true, superInterface, interfaces, getInterfaceImports());
 		unit.types().add(classType);
 
 		MethodFilter[] nonValidFilter = { new MethodFilter(getType().getTypeQualifiedName(), MethodFilter.TYPE_WHOLE), new MethodFilter(WizardConstants.INITIALIZE_ATTRIBUTES, MethodFilter.TYPE_WHOLE), new MethodFilter(WizardConstants.SET_DEFAULT_VALUES, MethodFilter.TYPE_WHOLE), new MethodFilter(WizardConstants.INSERT_START_DATA, MethodFilter.TYPE_WHOLE), new MethodFilter(WizardConstants.GET_ENTITY_NAME, MethodFilter.TYPE_WHOLE), new MethodFilter(WizardConstants.UPDATE, MethodFilter.TYPE_WHOLE), new MethodFilter(WizardConstants.DELETE, MethodFilter.TYPE_WHOLE), new MethodFilter(WizardConstants.INSERT, MethodFilter.TYPE_WHOLE), new MethodFilter(WizardConstants.REMOVE, MethodFilter.TYPE_WHOLE), new MethodFilter(WizardConstants.GET_NAME_OF_MIDDLE_TABLE, MethodFilter.TYPE_WHOLE), new MethodFilter(WizardConstants.GET_ID_COLUMN_NAME, MethodFilter.TYPE_WHOLE), new MethodFilter(WizardConstants.EJB_START, MethodFilter.TYPE_PREFIX) };
@@ -134,72 +114,15 @@ public class IBOEntityCreator extends BeanCreator {
 		List methods = filterMethods(getType().getMethods(), null, nonValidFilter);
 		for (Iterator iter = methods.iterator(); iter.hasNext();) {
 			IMethod method = (IMethod) iter.next();
-			String[] exceptions = method.getExceptionTypes();
-			String[] parameterTypes = method.getParameterTypes();
-			String[] parameterNames = method.getParameterNames();
-			String returnType = getReturnType(method.getReturnType());
-
-			MethodDeclaration methodConstructor = ast.newMethodDeclaration();
-			methodConstructor.setConstructor(false);
-			methodConstructor.modifiers().addAll(ast.newModifiers(Modifier.PUBLIC));
-			methodConstructor.setReturnType2(getType(ast, returnType));
-			methodConstructor.setName(ast.newSimpleName(method.getElementName()));
+			MethodDeclaration methodConstructor = getMethodDeclaration(ast, method, getInterfaceImports());
 			classType.bodyDeclarations().add(methodConstructor);
-			if (returnType != null) {
-				imports.add(getImportSignature(returnType));
-			}
-			
-			for (int i = 0; i < exceptions.length; i++) {
-				methodConstructor.thrownExceptions().add(ast.newSimpleName(Signature.getSignatureSimpleName(exceptions[i])));
-				imports.add(getImportSignature(Signature.toString(exceptions[i])));
-			}
+
 			methodConstructor.thrownExceptions().add(ast.newSimpleName("RemoteException"));
-			imports.add("java.rmi.RemoteException");
-
-			for (int i = 0; i < parameterTypes.length; i++) {
-				String parameterType = getReturnType(parameterTypes[i]);
-				
-				SingleVariableDeclaration variableDeclaration = ast.newSingleVariableDeclaration();
-				variableDeclaration.modifiers().addAll(ast.newModifiers(Modifier.NONE));
-				variableDeclaration.setType(getType(ast, parameterType));
-				variableDeclaration.setName(ast.newSimpleName(parameterNames[i]));
-				methodConstructor.parameters().add(variableDeclaration);
-
-				imports.add(getImportSignature(Signature.toString(parameterTypes[i])));
-			}
-
-			Javadoc jc = ast.newJavadoc();
-			TagElement tag = ast.newTagElement();
-			tag.setTagName(TagElement.TAG_SEE);
-			TextElement te = ast.newTextElement();
-			te.setText(getType().getFullyQualifiedName() + "#" + method.getElementName());
-			tag.fragments().add(te);
-			jc.tags().add(tag);
-			methodConstructor.setJavadoc(jc);
+			getInterfaceImports().add("java.rmi.RemoteException");
 		}
 
-		Iterator iter = imports.iterator();
-		while (iter.hasNext()) {
-			String importName = (String) iter.next();
-
-			if (importName != null) {
-				ImportDeclaration importDeclaration = ast.newImportDeclaration();
-				importDeclaration.setName(ast.newName(importName));
-				importDeclaration.setOnDemand(false);
-				
-				unit.imports().add(importDeclaration);
-			}
-		}
-
-		TextEdit edits = unit.rewrite(document, iUnit.getJavaProject().getOptions(true));
-		edits.apply(document);
-
-		String newSource = document.get();
-		iUnit.getBuffer().setContents(newSource);
-
-		iUnit.reconcile(ICompilationUnit.NO_AST, false, null, null);
-		iUnit.commitWorkingCopy(true, null);
-		iUnit.discardWorkingCopy();
+		writeImports(ast, unit, getInterfaceImports());
+		commitChanges(iUnit, unit, document);
 	}
 
 	private void createHomeInterface(IProgressMonitor monitor, ICompilationUnit iUnit, String typePackage, String name) throws JavaModelException, MalformedTreeException, BadLocationException {
@@ -215,20 +138,12 @@ public class IBOEntityCreator extends BeanCreator {
 
 		AST ast = unit.getAST();
 
-		Set imports = new HashSet();
-
 		// Package statement
-		PackageDeclaration packageDeclaration = ast.newPackageDeclaration();
-		unit.setPackage(packageDeclaration);
-		packageDeclaration.setName(ast.newName(typePackage));
+		unit.setPackage(getPackageDeclaration(ast, typePackage));
 
 		// class declaration
-		TypeDeclaration classType = ast.newTypeDeclaration();
-		classType.setInterface(true);
-		classType.modifiers().addAll(ast.newModifiers(Modifier.PUBLIC));
-		classType.setName(ast.newSimpleName(name + "Home"));
-		classType.superInterfaceTypes().add(ast.newSimpleType(ast.newSimpleName("IBOHome")));
-		imports.add("com.idega.business.IBOHome");
+		TypeDeclaration classType = getTypeDeclaration(ast, name + "Home", true, "IBOHome", null, getHomeInterfaceImports());
+		getHomeInterfaceImports().add("com.idega.business.IBOHome");
 		unit.types().add(classType);
 
 		// create() method
@@ -238,33 +153,13 @@ public class IBOEntityCreator extends BeanCreator {
 		methodConstructor.setReturnType2(ast.newSimpleType(ast.newSimpleName(name)));
 		methodConstructor.setName(ast.newSimpleName("create"));
 		methodConstructor.thrownExceptions().add(ast.newName("CreateException"));
-		imports.add("javax.ejb.CreateException");
+		getHomeInterfaceImports().add("javax.ejb.CreateException");
 		methodConstructor.thrownExceptions().add(ast.newName("RemoteException"));
-		imports.add("java.rmi.RemoteException");
+		getHomeInterfaceImports().add("java.rmi.RemoteException");
 		classType.bodyDeclarations().add(methodConstructor);
 
-		Iterator iter = imports.iterator();
-		while (iter.hasNext()) {
-			String importName = (String) iter.next();
-
-			if (importName != null) {
-				ImportDeclaration importDeclaration = ast.newImportDeclaration();
-				importDeclaration.setName(ast.newName(importName));
-				importDeclaration.setOnDemand(false);
-				
-				unit.imports().add(importDeclaration);
-			}
-		}
-
-		TextEdit edits = unit.rewrite(document, iUnit.getJavaProject().getOptions(true));
-		edits.apply(document);
-
-		String newSource = document.get();
-		iUnit.getBuffer().setContents(newSource);
-
-		iUnit.reconcile(ICompilationUnit.NO_AST, false, null, null);
-		iUnit.commitWorkingCopy(true, null);
-		iUnit.discardWorkingCopy();
+		writeImports(ast, unit, getHomeInterfaceImports());
+		commitChanges(iUnit, unit, document);
 	}
 
 	private void createHomeImplementation(IProgressMonitor monitor, ICompilationUnit iUnit, String typePackage, String name) throws JavaModelException, MalformedTreeException, BadLocationException {
@@ -280,21 +175,14 @@ public class IBOEntityCreator extends BeanCreator {
 
 		AST ast = unit.getAST();
 
-		Set imports = new HashSet();
-
 		// Package statement
 		PackageDeclaration packageDeclaration = ast.newPackageDeclaration();
 		unit.setPackage(packageDeclaration);
 		packageDeclaration.setName(ast.newName(typePackage));
 
 		// class declaration
-		TypeDeclaration classType = ast.newTypeDeclaration();
-		classType.setInterface(false);
-		classType.modifiers().addAll(ast.newModifiers(Modifier.PUBLIC));
-		classType.setName(ast.newSimpleName(name + "HomeImpl"));
-		classType.setSuperclassType(ast.newSimpleType(ast.newSimpleName("IBOHomeImpl")));
-		classType.superInterfaceTypes().add(ast.newSimpleType(ast.newSimpleName(name + "Home")));
-		imports.add("com.idega.business.IBOHomeImpl");
+		TypeDeclaration classType = getTypeDeclaration(ast, name + "HomeImpl", false, "IBOHomeImpl", null, getHomeImplImports());
+		getHomeImplImports().add("com.idega.business.IBOHomeImpl");
 		unit.types().add(classType);
 
 		// create() method
@@ -322,7 +210,7 @@ public class IBOEntityCreator extends BeanCreator {
 		methodConstructor.setReturnType2(ast.newSimpleType(ast.newSimpleName(name)));
 		methodConstructor.setName(ast.newSimpleName("create"));
 		methodConstructor.thrownExceptions().add(ast.newName("CreateException"));
-		imports.add("javax.ejb.CreateException");
+		getHomeImplImports().add("javax.ejb.CreateException");
 		classType.bodyDeclarations().add(methodConstructor);
 
 		constructorBlock = ast.newBlock();
@@ -339,27 +227,7 @@ public class IBOEntityCreator extends BeanCreator {
 		returnStatement.setExpression(ce);
 		constructorBlock.statements().add(returnStatement);
 
-		Iterator iter = imports.iterator();
-		while (iter.hasNext()) {
-			String importName = (String) iter.next();
-
-			if (importName != null) {
-				ImportDeclaration importDeclaration = ast.newImportDeclaration();
-				importDeclaration.setName(ast.newName(importName));
-				importDeclaration.setOnDemand(false);
-				
-				unit.imports().add(importDeclaration);
-			}
-		}
-
-		TextEdit edits = unit.rewrite(document, iUnit.getJavaProject().getOptions(true));
-		edits.apply(document);
-
-		String newSource = document.get();
-		iUnit.getBuffer().setContents(newSource);
-
-		iUnit.reconcile(ICompilationUnit.NO_AST, false, null, null);
-		iUnit.commitWorkingCopy(true, null);
-		iUnit.discardWorkingCopy();
+		writeImports(ast, unit, getHomeImplImports());
+		commitChanges(iUnit, unit, document);
 	}
 }

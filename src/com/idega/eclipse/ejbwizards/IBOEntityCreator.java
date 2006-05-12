@@ -38,15 +38,12 @@ import org.eclipse.text.edits.MalformedTreeException;
 
 public class IBOEntityCreator extends BeanCreator {
 
-	private boolean isSessionBean = false;
-
 	public IBOEntityCreator(IResource resource) {
 		this(resource, false);
 	}
 
 	public IBOEntityCreator(IResource resource, boolean isSessionBean) {
-		super(resource);
-		this.isSessionBean = isSessionBean;
+		super(resource, isSessionBean);
 	}
 
 	protected void generateCode() throws JavaModelException {
@@ -99,11 +96,11 @@ public class IBOEntityCreator extends BeanCreator {
 		String superInterface = null;
 		if (!this.isSessionBean) {
 			superInterface = "IBOService";
-			getInterfaceImports().add("com.idega.business.IBOService");
+			addInterfaceImport("com.idega.business.IBOService");
 		}
 		else {
 			superInterface = "IBOSession";
-			getInterfaceImports().add("com.idega.business.IBOSession");
+			addInterfaceImport("com.idega.business.IBOSession");
 		}
 
 		TypeDeclaration classType = getTypeDeclaration(ast, name, true, superInterface, interfaces, getInterfaceImports());
@@ -118,7 +115,7 @@ public class IBOEntityCreator extends BeanCreator {
 			classType.bodyDeclarations().add(methodConstructor);
 
 			methodConstructor.thrownExceptions().add(ast.newSimpleName("RemoteException"));
-			getInterfaceImports().add("java.rmi.RemoteException");
+			addInterfaceImport("java.rmi.RemoteException");
 		}
 
 		writeImports(ast, unit, getInterfaceImports());
@@ -143,7 +140,7 @@ public class IBOEntityCreator extends BeanCreator {
 
 		// class declaration
 		TypeDeclaration classType = getTypeDeclaration(ast, name + "Home", true, "IBOHome", null, getHomeInterfaceImports());
-		getHomeInterfaceImports().add("com.idega.business.IBOHome");
+		addHomeInterfaceImport("com.idega.business.IBOHome");
 		unit.types().add(classType);
 
 		// create() method
@@ -153,9 +150,9 @@ public class IBOEntityCreator extends BeanCreator {
 		methodConstructor.setReturnType2(ast.newSimpleType(ast.newSimpleName(name)));
 		methodConstructor.setName(ast.newSimpleName("create"));
 		methodConstructor.thrownExceptions().add(ast.newName("CreateException"));
-		getHomeInterfaceImports().add("javax.ejb.CreateException");
+		addHomeInterfaceImport("javax.ejb.CreateException");
 		methodConstructor.thrownExceptions().add(ast.newName("RemoteException"));
-		getHomeInterfaceImports().add("java.rmi.RemoteException");
+		addHomeInterfaceImport("java.rmi.RemoteException");
 		classType.bodyDeclarations().add(methodConstructor);
 
 		writeImports(ast, unit, getHomeInterfaceImports());
@@ -182,7 +179,7 @@ public class IBOEntityCreator extends BeanCreator {
 
 		// class declaration
 		TypeDeclaration classType = getTypeDeclaration(ast, name + "HomeImpl", false, "IBOHomeImpl", null, getHomeImplImports());
-		getHomeImplImports().add("com.idega.business.IBOHomeImpl");
+		addHomeImplImport("com.idega.business.IBOHomeImpl");
 		unit.types().add(classType);
 
 		// create() method
@@ -210,7 +207,7 @@ public class IBOEntityCreator extends BeanCreator {
 		methodConstructor.setReturnType2(ast.newSimpleType(ast.newSimpleName(name)));
 		methodConstructor.setName(ast.newSimpleName("create"));
 		methodConstructor.thrownExceptions().add(ast.newName("CreateException"));
-		getHomeImplImports().add("javax.ejb.CreateException");
+		addHomeImplImport("javax.ejb.CreateException");
 		classType.bodyDeclarations().add(methodConstructor);
 
 		constructorBlock = ast.newBlock();

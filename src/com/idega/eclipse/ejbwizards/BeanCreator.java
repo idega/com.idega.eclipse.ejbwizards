@@ -56,8 +56,18 @@ public abstract class BeanCreator {
 	private Set interfaceImports;
 	private Set homeInterfaceImports;
 	private Set homeImplImports;
+	
+	protected boolean isLegacyEntity = false;
+	protected boolean isSessionBean = false;
 
 	protected BeanCreator(IResource resource) {
+		this(resource, false);
+	}
+	
+	protected BeanCreator(IResource resource, boolean isLegacyOrSessionBean) {
+		this.isLegacyEntity = isLegacyOrSessionBean;
+		this.isSessionBean = isLegacyOrSessionBean;
+		
 		String resourceName = resource.getName();
 
 		IJavaElement javaElement = JavaCore.create(resource);
@@ -85,6 +95,10 @@ public abstract class BeanCreator {
 	}
 	
 	protected Set getInterfaceImports() {
+		if (this.interfaceImports == null) {
+			this.interfaceImports = new HashSet();
+		}
+		
 		return this.interfaceImports;
 	}
 
@@ -97,6 +111,10 @@ public abstract class BeanCreator {
 	}
 
 	protected Set getHomeInterfaceImports() {
+		if (this.homeInterfaceImports == null) {
+			this.homeInterfaceImports = new HashSet();
+		}
+		
 		return this.homeInterfaceImports;
 	}
 
@@ -109,6 +127,10 @@ public abstract class BeanCreator {
 	}
 
 	protected Set getHomeImplImports() {
+		if (this.homeImplImports == null) {
+			this.homeImplImports = new HashSet();
+		}
+		
 		return this.homeImplImports;
 	}
 
@@ -273,7 +295,12 @@ public abstract class BeanCreator {
 				}
 			}
 			catch (IllegalArgumentException iae) {
-				returnType = ast.newPrimitiveType(PrimitiveType.toCode(type));
+				if (isArray) {
+					returnType = ast.newArrayType(ast.newPrimitiveType(PrimitiveType.toCode(type.substring(0, type.indexOf("[")))));
+				}
+				else {
+					returnType = ast.newPrimitiveType(PrimitiveType.toCode(type));
+				}
 			}
 		}
 		else {

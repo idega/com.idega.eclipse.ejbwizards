@@ -51,15 +51,12 @@ import org.eclipse.text.edits.MalformedTreeException;
 
 public class IDOEntityCreator extends BeanCreator {
 
-	private boolean isLegacyEntity = false;
-
 	public IDOEntityCreator(IResource resource) {
 		this(resource, false);
 	}
 
 	public IDOEntityCreator(IResource resource, boolean isLegacyEntity) {
-		super(resource);
-		this.isLegacyEntity = isLegacyEntity;
+		super(resource, isLegacyEntity);
 	}
 
 	protected void generateCode() throws JavaModelException {
@@ -112,11 +109,11 @@ public class IDOEntityCreator extends BeanCreator {
 		String superInterface = null;
 		if (!this.isLegacyEntity) {
 			superInterface = "IDOEntity";
-			getInterfaceImports().add("com.idega.data.IDOEntity");
+			addInterfaceImport("com.idega.data.IDOEntity");
 		}
 		else {
 			superInterface = "IDOLegacyEntity";
-			getInterfaceImports().add("com.idega.data.IDOLegacyEntity");
+			addInterfaceImport("com.idega.data.IDOLegacyEntity");
 		}
 		
 		TypeDeclaration classType = getTypeDeclaration(ast, name, true, superInterface, interfaces, getInterfaceImports());
@@ -153,7 +150,7 @@ public class IDOEntityCreator extends BeanCreator {
 
 		// class declaration
 		TypeDeclaration classType = getTypeDeclaration(ast, name + "Home", true, "IDOHome", null, getHomeInterfaceImports());
-		getHomeInterfaceImports().add("com.idega.data.IDOHome");
+		addHomeInterfaceImport("com.idega.data.IDOHome");
 		unit.types().add(classType);
 
 		// create() method
@@ -163,7 +160,7 @@ public class IDOEntityCreator extends BeanCreator {
 		methodConstructor.setReturnType2(ast.newSimpleType(ast.newSimpleName(name)));
 		methodConstructor.setName(ast.newSimpleName("create"));
 		methodConstructor.thrownExceptions().add(ast.newName("CreateException"));
-		getHomeInterfaceImports().add("javax.ejb.CreateException");
+		addHomeInterfaceImport("javax.ejb.CreateException");
 		classType.bodyDeclarations().add(methodConstructor);
 
 		// findByPrimarKey(Object) method
@@ -173,7 +170,7 @@ public class IDOEntityCreator extends BeanCreator {
 		methodConstructor.setReturnType2(ast.newSimpleType(ast.newSimpleName(name)));
 		methodConstructor.setName(ast.newSimpleName("findByPrimaryKey"));
 		methodConstructor.thrownExceptions().add(ast.newName("FinderException"));
-		getHomeInterfaceImports().add("javax.ejb.FinderException");
+		addHomeInterfaceImport("javax.ejb.FinderException");
 		classType.bodyDeclarations().add(methodConstructor);
 
 		SingleVariableDeclaration variableDeclaration = ast.newSingleVariableDeclaration();
@@ -205,7 +202,7 @@ public class IDOEntityCreator extends BeanCreator {
 			methodConstructor.setReturnType2(ast.newSimpleType(ast.newSimpleName(name)));
 			methodConstructor.setName(ast.newSimpleName("findByPrimaryKeyLegacy"));
 			methodConstructor.thrownExceptions().add(ast.newName("java.sql.SQLException"));
-			getHomeInterfaceImports().add("java.sql.SQLException");
+			addHomeInterfaceImport("java.sql.SQLException");
 			classType.bodyDeclarations().add(methodConstructor);
 
 			variableDeclaration = ast.newSingleVariableDeclaration();
@@ -228,8 +225,11 @@ public class IDOEntityCreator extends BeanCreator {
 					returnType = name;
 				}
 			}
-
-			methodConstructor = getMethodDeclaration(ast, method, methodName, returnType, getInterfaceImports(), false);
+			if (!returnType.equals(name)) {
+				returnType = getReturnType(returnType);
+			}
+			
+			methodConstructor = getMethodDeclaration(ast, method, methodName, returnType, getHomeInterfaceImports(), false);
 			classType.bodyDeclarations().add(methodConstructor);
 		}
 
@@ -255,7 +255,7 @@ public class IDOEntityCreator extends BeanCreator {
 
 		// class declaration
 		TypeDeclaration classType = getTypeDeclaration(ast, name + "HomeImpl", false, "IDOFactory", null, getHomeImplImports());
-		getHomeImplImports().add("com.idega.data.IDOFactory");
+		addHomeImplImport("com.idega.data.IDOFactory");
 		unit.types().add(classType);
 
 		// create() method
@@ -283,7 +283,7 @@ public class IDOEntityCreator extends BeanCreator {
 		methodConstructor.setReturnType2(ast.newSimpleType(ast.newSimpleName(name)));
 		methodConstructor.setName(ast.newSimpleName("create"));
 		methodConstructor.thrownExceptions().add(ast.newName("CreateException"));
-		getHomeImplImports().add("javax.ejb.CreateException");
+		addHomeImplImport("javax.ejb.CreateException");
 		classType.bodyDeclarations().add(methodConstructor);
 
 		constructorBlock = ast.newBlock();
@@ -307,7 +307,7 @@ public class IDOEntityCreator extends BeanCreator {
 		methodConstructor.setReturnType2(ast.newSimpleType(ast.newSimpleName(name)));
 		methodConstructor.setName(ast.newSimpleName("findByPrimaryKey"));
 		methodConstructor.thrownExceptions().add(ast.newName("FinderException"));
-		getHomeImplImports().add("javax.ejb.FinderException");
+		addHomeImplImport("javax.ejb.FinderException");
 		classType.bodyDeclarations().add(methodConstructor);
 
 		SingleVariableDeclaration variableDeclaration = ast.newSingleVariableDeclaration();
@@ -411,7 +411,7 @@ public class IDOEntityCreator extends BeanCreator {
 			methodConstructor.setReturnType2(ast.newSimpleType(ast.newSimpleName(name)));
 			methodConstructor.setName(ast.newSimpleName("findByPrimaryKeyLegacy"));
 			methodConstructor.thrownExceptions().add(ast.newName("SQLException"));
-			getHomeImplImports().add("java.sql.SQLException");
+			addHomeImplImport("java.sql.SQLException");
 			classType.bodyDeclarations().add(methodConstructor);
 
 			variableDeclaration = ast.newSingleVariableDeclaration();
@@ -473,8 +473,11 @@ public class IDOEntityCreator extends BeanCreator {
 					returnType = name;
 				}
 			}
+			if (!returnType.equals(name)) {
+				returnType = getReturnType(returnType);
+			}
 
-			methodConstructor = getMethodDeclaration(ast, method, methodName, returnType, getInterfaceImports(), false);
+			methodConstructor = getMethodDeclaration(ast, method, methodName, returnType, getHomeImplImports(), false);
 			classType.bodyDeclarations().add(methodConstructor);
 			
 			constructorBlock = ast.newBlock();
@@ -545,7 +548,7 @@ public class IDOEntityCreator extends BeanCreator {
 
 				ClassInstanceCreation cc = ast.newClassInstanceCreation();
 				cc.setType(ast.newSimpleType(ast.newSimpleName("IDOCreateException")));
-				getHomeImplImports().add("com.idega.data.IDOCreateException");
+				addHomeImplImport("com.idega.data.IDOCreateException");
 				cc.arguments().add(ast.newSimpleName(("fe")));
 
 				ThrowStatement throwStatement = ast.newThrowStatement();
@@ -606,7 +609,7 @@ public class IDOEntityCreator extends BeanCreator {
 		VariableDeclarationFragment vdf = ast.newVariableDeclarationFragment();
 		vdf.setName(ast.newSimpleName(variableName));
 		VariableDeclarationStatement vds = ast.newVariableDeclarationStatement(vdf);
-		vds.setType(ast.newSimpleType(ast.newSimpleName(returnType)));
+		vds.setType(getType(ast, returnType));
 		
 		CastExpression ce = ast.newCastExpression();
 		ce.setType(ast.newSimpleType(ast.newSimpleName(getType().getTypeQualifiedName())));
@@ -640,11 +643,8 @@ public class IDOEntityCreator extends BeanCreator {
 	}
 
 	private Statement getPrimitiveReturnStatement(AST ast, String variableName) {
-		VariableDeclarationFragment vdf = ast.newVariableDeclarationFragment();
-		vdf.setName(ast.newSimpleName(variableName));
-		
 		ReturnStatement returnStatement = ast.newReturnStatement();
-		returnStatement.setExpression(ast.newVariableDeclarationExpression(vdf));
+		returnStatement.setExpression(ast.newName(variableName));
 		
 		return returnStatement;
 	}

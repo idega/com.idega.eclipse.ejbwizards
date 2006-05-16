@@ -179,6 +179,7 @@ public class IBOEntityCreator extends BeanCreator {
 
 		// class declaration
 		TypeDeclaration classType = getTypeDeclaration(ast, name + "HomeImpl", false, "IBOHomeImpl", null, getHomeImplImports());
+		classType.superInterfaceTypes().add(name + "Home");
 		addHomeImplImport("com.idega.business.IBOHomeImpl");
 		unit.types().add(classType);
 

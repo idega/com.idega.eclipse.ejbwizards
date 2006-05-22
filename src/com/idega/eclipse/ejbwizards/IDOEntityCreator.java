@@ -255,7 +255,7 @@ public class IDOEntityCreator extends BeanCreator {
 
 		// class declaration
 		TypeDeclaration classType = getTypeDeclaration(ast, name + "HomeImpl", false, "IDOFactory", null, getHomeImplImports());
-		classType.superInterfaceTypes().add(name + "Home");
+		classType.superInterfaceTypes().add(ast.newSimpleType(ast.newSimpleName(name + "Home")));
 		addHomeImplImport("com.idega.data.IDOFactory");
 		unit.types().add(classType);
 

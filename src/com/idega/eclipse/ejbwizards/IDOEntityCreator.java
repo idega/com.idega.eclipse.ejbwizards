@@ -29,9 +29,11 @@ import org.eclipse.jdt.core.dom.CastExpression;
 import org.eclipse.jdt.core.dom.CatchClause;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.MarkerAnnotation;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.ParenthesizedExpression;
 import org.eclipse.jdt.core.dom.PrimitiveType;
 import org.eclipse.jdt.core.dom.ReturnStatement;
@@ -221,7 +223,7 @@ public class IDOEntityCreator extends BeanCreator {
 
 			String returnType = method.getReturnType();
 			if (fullMethodName.startsWith(WizardConstants.EJB_FIND_START) || fullMethodName.startsWith(WizardConstants.EJB_CREATE_START)) {
-				if (!Signature.getSimpleName(Signature.toString(method.getReturnType())).equals(Signature.getSimpleName("java.util.Collection")) && !Signature.getSimpleName(Signature.toString(method.getReturnType())).equals(Signature.getSimpleName("java.util.Set"))) {
+				if (!Signature.getSimpleName(Signature.toString(method.getReturnType())).contains(Signature.getSimpleName("java.util.Collection")) && !Signature.getSimpleName(Signature.toString(method.getReturnType())).contains(Signature.getSimpleName("java.util.Set"))) {
 					returnType = name;
 				}
 			}
@@ -262,9 +264,22 @@ public class IDOEntityCreator extends BeanCreator {
 		// create() method
 		MethodDeclaration methodConstructor = ast.newMethodDeclaration();
 		methodConstructor.setConstructor(false);
+		if (this.isJDK1_5) {
+			MarkerAnnotation annotation = ast.newMarkerAnnotation();
+			annotation.setTypeName(ast.newSimpleName("Override"));
+			methodConstructor.modifiers().add(annotation);
+		}
 		methodConstructor.modifiers().addAll(ast.newModifiers(Modifier.PUBLIC));
-		methodConstructor.setReturnType2(ast.newSimpleType(ast.newSimpleName("Class")));
+		if (this.isJDK1_5) {
+			ParameterizedType returnType = ast.newParameterizedType(ast.newSimpleType(ast.newSimpleName("Class")));
+			returnType.typeArguments().add(ast.newSimpleType(ast.newSimpleName(name + "Home")));
+			methodConstructor.setReturnType2(returnType);
+		}
+		else {
+			methodConstructor.setReturnType2(ast.newSimpleType(ast.newSimpleName("Class")));
+		}
 		methodConstructor.setName(ast.newSimpleName("getEntityInterfaceClass"));
+
 		classType.bodyDeclarations().add(methodConstructor);
 
 		Block constructorBlock = ast.newBlock();
@@ -470,7 +485,7 @@ public class IDOEntityCreator extends BeanCreator {
 
 			String returnType = method.getReturnType();
 			if (fullMethodName.startsWith(WizardConstants.EJB_FIND_START) || fullMethodName.startsWith(WizardConstants.EJB_CREATE_START)) {
-				if (!Signature.getSimpleName(Signature.toString(method.getReturnType())).equals(Signature.getSimpleName("java.util.Collection")) && !Signature.getSimpleName(Signature.toString(method.getReturnType())).equals(Signature.getSimpleName("java.util.Set"))) {
+				if (!Signature.getSimpleName(Signature.toString(method.getReturnType())).contains(Signature.getSimpleName("java.util.Collection")) && !Signature.getSimpleName(Signature.toString(method.getReturnType())).contains(Signature.getSimpleName("java.util.Set"))) {
 					returnType = name;
 				}
 			}
@@ -487,12 +502,12 @@ public class IDOEntityCreator extends BeanCreator {
 			constructorBlock.statements().add(getIDOCheckOutStatement(ast, getHomeImplImports())); 
 
 			if (fullMethodName.startsWith(WizardConstants.EJB_FIND_START)) {
-				if (Signature.getSimpleName(Signature.toString(method.getReturnType())).equals(Signature.getSimpleName("java.util.Collection"))) {
+				if (Signature.getSimpleName(Signature.toString(method.getReturnType())).contains(Signature.getSimpleName("java.util.Collection"))) {
 					constructorBlock.statements().add(getDataCollectingStatement(ast, returnType, "ids", fullMethodName, parameterNames));
 					constructorBlock.statements().add(getIDOCheckInStatement(ast));
 					constructorBlock.statements().add(getObjectReturnStatement(ast, "getEntityCollectionForPrimaryKeys", "ids"));
 				}
-				else if (Signature.getSimpleName(Signature.toString(method.getReturnType())).equals(Signature.getSimpleName("java.util.Set"))) {
+				else if (Signature.getSimpleName(Signature.toString(method.getReturnType())).contains(Signature.getSimpleName("java.util.Set"))) {
 					constructorBlock.statements().add(getDataCollectingStatement(ast, returnType, "ids", fullMethodName, parameterNames));
 					constructorBlock.statements().add(getIDOCheckInStatement(ast));
 					constructorBlock.statements().add(getObjectReturnStatement(ast, "getEntitySetForPrimaryKeys", "ids"));

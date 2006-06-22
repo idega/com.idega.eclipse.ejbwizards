@@ -15,6 +15,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
@@ -36,6 +37,7 @@ import org.eclipse.jdt.core.dom.Javadoc;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
+import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.PrimitiveType;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TagElement;
@@ -43,8 +45,10 @@ import org.eclipse.jdt.core.dom.TextElement;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.ui.CodeGeneration;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.TextEdit;
 
@@ -59,6 +63,7 @@ public abstract class BeanCreator {
 	
 	protected boolean isLegacyEntity = false;
 	protected boolean isSessionBean = false;
+	protected boolean isJDK1_5 = false;
 
 	protected BeanCreator(IResource resource) {
 		this(resource, false);
@@ -77,13 +82,29 @@ public abstract class BeanCreator {
 			fillImportMap(compilationUnit);
 			this.type = compilationUnit.getType(typeName);
 		}
-
+		
+		Map map = javaElement.getJavaProject().getOptions(false);
+		if (map != null) {
+			String value = (String) map.get("org.eclipse.jdt.core.compiler.compliance");
+			if (value != null) {
+				float version = Float.parseFloat(value);
+				if (version > 1.4) {
+					this.isJDK1_5 = true;
+				}
+			}
+		}
+		
 		try {
 			generateCode();
 		}
 		catch (JavaModelException jme) {
 			jme.printStackTrace(System.err);
 		}
+	}
+	
+	protected void displayInformation(String title, String text) {
+		Shell shell = new Shell();
+		MessageDialog.openInformation(shell, title, text);
 	}
 	
 	protected void addInterfaceImport(String importName) {
@@ -173,6 +194,9 @@ public abstract class BeanCreator {
 	protected String getImportSignature(String importName) {
 		if (importName.indexOf("[") != -1) {
 			importName = importName.substring(0, importName.indexOf("["));
+		}
+		if (importName.indexOf("<") != -1) {
+			importName = importName.substring(0, importName.indexOf("<"));
 		}
 		return (String) this.importMap.get(importName);
 	}
@@ -282,13 +306,25 @@ public abstract class BeanCreator {
 		
 		if (type != null) {
 			boolean isArray = false;
+			boolean isGenericType = false;
 			if (type.indexOf("[") != -1) {
 				isArray = true;
+			}
+			if (type.indexOf("<") != -1) {
+				isGenericType = true;
 			}
 			
 			try {
 				if (isArray) {
 					returnType = ast.newArrayType(ast.newSimpleType(ast.newSimpleName(type.substring(0, type.indexOf("[")))));
+				}
+				else if (isGenericType) {
+					returnType = ast.newParameterizedType(ast.newSimpleType(ast.newSimpleName(type.substring(0, type.indexOf("<")))));
+
+					StringTokenizer tokens = new StringTokenizer(type.substring(type.indexOf("<") + 1, type.indexOf(">")), ",");
+					while (tokens.hasMoreTokens()) {
+						((ParameterizedType) returnType).typeArguments().add(getType(ast, tokens.nextToken().trim()));
+					}
 				}
 				else {
 					returnType = ast.newSimpleType(ast.newSimpleName(type));

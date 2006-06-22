@@ -25,9 +25,11 @@ import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.CastExpression;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.MarkerAnnotation;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
+import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
@@ -186,9 +188,22 @@ public class IBOEntityCreator extends BeanCreator {
 		// create() method
 		MethodDeclaration methodConstructor = ast.newMethodDeclaration();
 		methodConstructor.setConstructor(false);
+		if (this.isJDK1_5) {
+			MarkerAnnotation annotation = ast.newMarkerAnnotation();
+			annotation.setTypeName(ast.newSimpleName("Override"));
+			methodConstructor.modifiers().add(annotation);
+		}
 		methodConstructor.modifiers().addAll(ast.newModifiers(Modifier.PUBLIC));
-		methodConstructor.setReturnType2(ast.newSimpleType(ast.newSimpleName("Class")));
+		if (this.isJDK1_5) {
+			ParameterizedType returnType = ast.newParameterizedType(ast.newSimpleType(ast.newSimpleName("Class")));
+			returnType.typeArguments().add(ast.newSimpleType(ast.newSimpleName(name)));
+			methodConstructor.setReturnType2(returnType);
+		}
+		else {
+			methodConstructor.setReturnType2(ast.newSimpleType(ast.newSimpleName("Class")));
+		}
 		methodConstructor.setName(ast.newSimpleName("getBeanInterfaceClass"));
+		
 		classType.bodyDeclarations().add(methodConstructor);
 
 		Block constructorBlock = ast.newBlock();

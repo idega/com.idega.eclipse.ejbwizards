@@ -1,7 +1,7 @@
 Manifest-Version: 1.2
 Bundle-Name: Ejbwizards Plug-in
 Bundle-SymbolicName: com.idega.eclipse.ejbwizards;singleton:=true
-Bundle-Version: 2.0.3
+Bundle-Version: 2.1.0
 Bundle-Activator: com.idega.eclipse.ejbwizards.EjbwizardsPlugin
 Bundle-Vendor: IDEGA
 Bundle-Localization: plugin

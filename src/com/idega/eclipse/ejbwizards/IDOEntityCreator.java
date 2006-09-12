@@ -182,13 +182,21 @@ public class IDOEntityCreator extends BeanCreator {
 		methodConstructor.parameters().add(variableDeclaration);
 
 		if (this.isLegacyEntity) {
+			// createLegacy(int) method
+			methodConstructor = ast.newMethodDeclaration();
+			methodConstructor.setConstructor(false);
+			methodConstructor.modifiers().addAll(ast.newModifiers(Modifier.PUBLIC));
+			methodConstructor.setReturnType2(ast.newSimpleType(ast.newSimpleName(name)));
+			methodConstructor.setName(ast.newSimpleName("createLegacy"));
+			classType.bodyDeclarations().add(methodConstructor);
+
 			// findByPrimarKey(int) method
 			methodConstructor = ast.newMethodDeclaration();
 			methodConstructor.setConstructor(false);
 			methodConstructor.modifiers().addAll(ast.newModifiers(Modifier.PUBLIC));
 			methodConstructor.setReturnType2(ast.newSimpleType(ast.newSimpleName(name)));
 			methodConstructor.setName(ast.newSimpleName("findByPrimaryKey"));
-			methodConstructor.thrownExceptions().add(ast.newName("javax.ejb.FinderException"));
+			methodConstructor.thrownExceptions().add(ast.newName("FinderException"));
 			classType.bodyDeclarations().add(methodConstructor);
 
 			variableDeclaration = ast.newSingleVariableDeclaration();
@@ -203,7 +211,7 @@ public class IDOEntityCreator extends BeanCreator {
 			methodConstructor.modifiers().addAll(ast.newModifiers(Modifier.PUBLIC));
 			methodConstructor.setReturnType2(ast.newSimpleType(ast.newSimpleName(name)));
 			methodConstructor.setName(ast.newSimpleName("findByPrimaryKeyLegacy"));
-			methodConstructor.thrownExceptions().add(ast.newName("java.sql.SQLException"));
+			methodConstructor.thrownExceptions().add(ast.newName("SQLException"));
 			addHomeInterfaceImport("java.sql.SQLException");
 			classType.bodyDeclarations().add(methodConstructor);
 
@@ -354,7 +362,6 @@ public class IDOEntityCreator extends BeanCreator {
 			methodConstructor.modifiers().addAll(ast.newModifiers(Modifier.PUBLIC));
 			methodConstructor.setReturnType2(ast.newSimpleType(ast.newSimpleName(name)));
 			methodConstructor.setName(ast.newSimpleName("createLegacy"));
-			methodConstructor.thrownExceptions().add(ast.newName("CreateException"));
 			classType.bodyDeclarations().add(methodConstructor);
 
 			constructorBlock = ast.newBlock();
@@ -387,7 +394,6 @@ public class IDOEntityCreator extends BeanCreator {
 			mi = ast.newMethodInvocation();
 			mi.setExpression(ast.newSimpleName("ce"));
 			mi.setName(ast.newSimpleName("getMessage"));
-			catchBlock.statements().add(ast.newExpressionStatement(mi));
 			cc.arguments().add(mi);
 
 			ThrowStatement throwStatement = ast.newThrowStatement();
@@ -416,8 +422,12 @@ public class IDOEntityCreator extends BeanCreator {
 			superMethodInvocation.setName(ast.newSimpleName("findByPrimaryKeyIDO"));
 			superMethodInvocation.arguments().add(ast.newSimpleName("id"));
 
+			ce = ast.newCastExpression();
+			ce.setType(ast.newSimpleType(ast.newSimpleName(name)));
+			ce.setExpression(superMethodInvocation);
+
 			returnStatement = ast.newReturnStatement();
-			returnStatement.setExpression(superMethodInvocation);
+			returnStatement.setExpression(ce);
 			constructorBlock.statements().add(returnStatement);
 
 			// findByPrimarKeyLegacy(int) method
@@ -467,7 +477,6 @@ public class IDOEntityCreator extends BeanCreator {
 			mi = ast.newMethodInvocation();
 			mi.setExpression(ast.newSimpleName("fe"));
 			mi.setName(ast.newSimpleName("getMessage"));
-			catchBlock.statements().add(ast.newExpressionStatement(mi));
 			cc.arguments().add(mi);
 
 			throwStatement = ast.newThrowStatement();

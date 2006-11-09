@@ -231,7 +231,7 @@ public class IDOEntityCreator extends BeanCreator {
 
 			String returnType = method.getReturnType();
 			if (fullMethodName.startsWith(WizardConstants.EJB_FIND_START) || fullMethodName.startsWith(WizardConstants.EJB_CREATE_START)) {
-				if (!Signature.getSimpleName(Signature.toString(method.getReturnType())).contains(Signature.getSimpleName("java.util.Collection")) && !Signature.getSimpleName(Signature.toString(method.getReturnType())).contains(Signature.getSimpleName("java.util.Set"))) {
+				if (!(Signature.getSimpleName(Signature.toString(method.getReturnType())).indexOf(Signature.getSimpleName("java.util.Collection")) != -1) && !(Signature.getSimpleName(Signature.toString(method.getReturnType())).indexOf(Signature.getSimpleName("java.util.Set")) != -1)) {
 					returnType = name;
 				}
 			}
@@ -494,7 +494,7 @@ public class IDOEntityCreator extends BeanCreator {
 
 			String returnType = method.getReturnType();
 			if (fullMethodName.startsWith(WizardConstants.EJB_FIND_START) || fullMethodName.startsWith(WizardConstants.EJB_CREATE_START)) {
-				if (!Signature.getSimpleName(Signature.toString(method.getReturnType())).contains(Signature.getSimpleName("java.util.Collection")) && !Signature.getSimpleName(Signature.toString(method.getReturnType())).contains(Signature.getSimpleName("java.util.Set"))) {
+				if (!(Signature.getSimpleName(Signature.toString(method.getReturnType())).indexOf(Signature.getSimpleName("java.util.Collection")) != -1) && !(Signature.getSimpleName(Signature.toString(method.getReturnType())).indexOf(Signature.getSimpleName("java.util.Set")) != -1)) {
 					returnType = name;
 				}
 			}
@@ -511,12 +511,12 @@ public class IDOEntityCreator extends BeanCreator {
 			constructorBlock.statements().add(getIDOCheckOutStatement(ast, getHomeImplImports())); 
 
 			if (fullMethodName.startsWith(WizardConstants.EJB_FIND_START)) {
-				if (Signature.getSimpleName(Signature.toString(method.getReturnType())).contains(Signature.getSimpleName("java.util.Collection"))) {
+				if (Signature.getSimpleName(Signature.toString(method.getReturnType())).indexOf(Signature.getSimpleName("java.util.Collection")) != -1) {
 					constructorBlock.statements().add(getDataCollectingStatement(ast, returnType, "ids", fullMethodName, parameterNames));
 					constructorBlock.statements().add(getIDOCheckInStatement(ast));
 					constructorBlock.statements().add(getObjectReturnStatement(ast, "getEntityCollectionForPrimaryKeys", "ids"));
 				}
-				else if (Signature.getSimpleName(Signature.toString(method.getReturnType())).contains(Signature.getSimpleName("java.util.Set"))) {
+				else if (Signature.getSimpleName(Signature.toString(method.getReturnType())).indexOf(Signature.getSimpleName("java.util.Set")) != -1) {
 					constructorBlock.statements().add(getDataCollectingStatement(ast, returnType, "ids", fullMethodName, parameterNames));
 					constructorBlock.statements().add(getIDOCheckInStatement(ast));
 					constructorBlock.statements().add(getObjectReturnStatement(ast, "getEntitySetForPrimaryKeys", "ids"));

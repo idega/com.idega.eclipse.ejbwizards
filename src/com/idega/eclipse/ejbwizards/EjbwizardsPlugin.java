@@ -10,11 +10,12 @@ import org.osgi.framework.BundleContext;
  * The main plugin class to be used in the desktop.
  */
 public class EjbwizardsPlugin extends AbstractUIPlugin {
+
 	//The shared instance.
 	private static EjbwizardsPlugin plugin;
 	//Resource bundle.
 	private ResourceBundle resourceBundle;
-	
+
 	/**
 	 * The constructor.
 	 */
@@ -23,7 +24,8 @@ public class EjbwizardsPlugin extends AbstractUIPlugin {
 		plugin = this;
 		try {
 			this.resourceBundle = ResourceBundle.getBundle("com.idega.eclipse.ejbwizards.EjbwizardsPluginResources");
-		} catch (MissingResourceException x) {
+		}
+		catch (MissingResourceException x) {
 			this.resourceBundle = null;
 		}
 	}
@@ -50,14 +52,15 @@ public class EjbwizardsPlugin extends AbstractUIPlugin {
 	}
 
 	/**
-	 * Returns the string from the plugin's resource bundle,
-	 * or 'key' if not found.
+	 * Returns the string from the plugin's resource bundle, or 'key' if not
+	 * found.
 	 */
 	public static String getResourceString(String key) {
 		ResourceBundle bundle = EjbwizardsPlugin.getDefault().getResourceBundle();
 		try {
 			return (bundle != null) ? bundle.getString(key) : key;
-		} catch (MissingResourceException e) {
+		}
+		catch (MissingResourceException e) {
 			return key;
 		}
 	}
